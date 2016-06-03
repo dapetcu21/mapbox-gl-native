@@ -13,7 +13,6 @@
   },
   "license": "BSD-2-Clause",
   "dependencies": {
-    "nan": "^2.3.5",
     "node-pre-gyp": "^0.6.28"
   },
   "devDependencies": {
@@ -24,7 +23,7 @@
     "mapbox-gl-shaders": "mapbox/mapbox-gl-shaders#59e998295d548f208ee3ec10cdd21ff2630e2079",
     "mapbox-gl-style-spec": "mapbox/mapbox-gl-style-spec#194fc55b6a7dd54c1e2cf2dd9048fbb5e836716d",
     "mapbox-gl-test-suite": "mapbox/mapbox-gl-test-suite#cb733d358a95d46344c2212f1546ed94022718f7",
-    "node-gyp": "^3.3.1",
+    "node-cmake": "^1.2.1",
     "request": "^2.72.0",
     "tape": "^4.5.1"
   },
@@ -33,7 +32,7 @@
   },
   "scripts": {
     "preinstall": "npm install node-pre-gyp",
-    "install": "node-pre-gyp install --fallback-to-build=false || make node",
+    "install": "node-pre-gyp install --fallback-to-build=false || BUILDTYPE=Release make node",
     "test": "tape platform/node/test/js/**/*.test.js",
     "test-suite": "node platform/node/test/render.test.js && node platform/node/test/query.test.js"
   },
