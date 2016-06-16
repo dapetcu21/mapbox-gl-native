@@ -20,10 +20,13 @@ void Painter::renderRaster(RasterBucket& bucket,
     if (bucket.hasData()) {
         const auto& shaderRaster = isOverdraw() ? rasterOverdrawShader : rasterShader;
         auto& vaoRaster = isOverdraw() ? coveringRasterOverdrawArray : coveringRasterArray;
+
         config.program = shaderRaster->getID();
         shaderRaster->u_matrix = matrix;
-        shaderRaster->u_buffer = 0;
-        shaderRaster->u_opacity = properties.rasterOpacity;
+        shaderRaster->u_buffer_scale = 1.0f;
+        shaderRaster->u_opacity0 = properties.rasterOpacity;
+        shaderRaster->u_opacity1 = 1.0f - properties.rasterOpacity;
+
         shaderRaster->u_brightness_low = properties.rasterBrightnessMin;
         shaderRaster->u_brightness_high = properties.rasterBrightnessMax;
         shaderRaster->u_saturation_factor = saturationFactor(properties.rasterSaturation);
@@ -32,14 +35,18 @@ void Painter::renderRaster(RasterBucket& bucket,
 
         config.stencilTest = GL_FALSE;
 
-        shaderRaster->u_image = 0;
-        config.activeTexture = GL_TEXTURE0;
+        shaderRaster->u_image0 = 0; // GL_TEXTURE0
+        shaderRaster->u_image1 = 1; // GL_TEXTURE1
+        shaderRaster->u_tl_parent = {{ 0.0f, 0.0f }};
+        shaderRaster->u_scale_parent = 1.0f;
 
         config.depthFunc.reset();
         config.depthTest = GL_TRUE;
         config.depthMask = GL_FALSE;
         setDepthSublayer(0);
-        bucket.drawRaster(*shaderRaster, tileStencilBuffer, vaoRaster, store);
+
+        bucket.bindTextures(config, store);
+        bucket.drawRaster(*shaderRaster, rasterBoundsBuffer, vaoRaster, store);
     }
 }
 
