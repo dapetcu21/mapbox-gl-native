@@ -29,7 +29,7 @@ void RasterBucket::drawRaster(RasterShader& shader,
                               StaticVertexBuffer& vertices,
                               VertexArrayObject& array,
                               gl::ObjectStore& store) {
-    raster.bind(true, store);
+    raster.bind(store, Raster::Scaling::Linear);
     array.bind(shader, vertices, BUFFER_OFFSET_0, store);
     MBGL_CHECK_ERROR(glDrawArrays(GL_TRIANGLES, 0, (GLsizei)vertices.index()));
 }
