@@ -437,52 +437,52 @@
                     <modifierMask key="keyEquivalentModifierMask"/>
                     <menu key="submenu" title="Debug" id="McE-ka-r79">
                         <items>
-                            <menuItem title="Show Tile Boundaries" id="rDE-dG-rTR">
+                            <menuItem title="Show Tile Boundaries" keyEquivalent="b" id="rDE-dG-rTR">
                                 <modifierMask key="keyEquivalentModifierMask"/>
                                 <connections>
                                     <action selector="toggleTileBoundaries:" target="-1" id="LAO-88-F7h"/>
                                 </connections>
                             </menuItem>
-                            <menuItem title="Show Tile Info" id="LoH-qD-kb0">
+                            <menuItem title="Show Tile Info" keyEquivalent="i" id="LoH-qD-kb0">
                                 <modifierMask key="keyEquivalentModifierMask"/>
                                 <connections>
                                     <action selector="toggleTileInfo:" target="-1" id="KCn-0G-V87"/>
                                 </connections>
                             </menuItem>
-                            <menuItem title="Show Tile Timestamps" id="bY0-2E-LZ7">
+                            <menuItem title="Show Tile Timestamps" keyEquivalent="t" id="bY0-2E-LZ7">
                                 <modifierMask key="keyEquivalentModifierMask"/>
                                 <connections>
                                     <action selector="toggleTileTimestamps:" target="-1" id="tBs-2N-KEG"/>
                                 </connections>
                             </menuItem>
-                            <menuItem title="Show Collision Boxes" id="Y0b-3K-mJE">
+                            <menuItem title="Show Collision Boxes" keyEquivalent="c" id="Y0b-3K-mJE">
                                 <modifierMask key="keyEquivalentModifierMask"/>
                                 <connections>
                                     <action selector="toggleCollisionBoxes:" target="-1" id="EYa-7n-iWZ"/>
                                 </connections>
                             </menuItem>
-                            <menuItem title="Show Overdraw Visualization" id="hSX-Be-8xC">
+                            <menuItem title="Show Overdraw Visualization" keyEquivalent="o" id="hSX-Be-8xC">
                                 <modifierMask key="keyEquivalentModifierMask"/>
                                 <connections>
                                     <action selector="toggleOverdrawVisualization:" target="-1" id="usj-ug-upt"/>
                                 </connections>
                             </menuItem>
                             <menuItem isSeparatorItem="YES" id="2EG-Hp-4FA"/>
-                            <menuItem title="Show Color Buffer" id="Eao-WE-BWz">
-                                <modifierMask key="keyEquivalentModifierMask"/>
+                            <menuItem title="Color Buffer" keyEquivalent="c" id="Eao-WE-BWz">
+                                <modifierMask key="keyEquivalentModifierMask" option="YES"/>
                                 <connections>
                                     <action selector="showColorBuffer:" target="-1" id="Nuq-Qs-98g"/>
                                 </connections>
                             </menuItem>
-                            <menuItem title="Show Stencil Buffer" id="LlS-Yh-RkN">
-                                <modifierMask key="keyEquivalentModifierMask"/>
+                            <menuItem title="Stencil Buffer" keyEquivalent="s" id="LlS-Yh-RkN">
+                                <modifierMask key="keyEquivalentModifierMask" option="YES"/>
                                 <connections>
                                     <action selector="showStencilBuffer:" target="-1" id="WkN-t9-Mpv"/>
                                 </connections>
                             </menuItem>
                             <menuItem isSeparatorItem="YES" id="dYw-bb-tr1"/>
-                            <menuItem title="Show Tooltips on Dropped Pins" id="uir-Rx-zmw">
-                                <modifierMask key="keyEquivalentModifierMask"/>
+                            <menuItem title="Show Tooltips on Dropped Pins" keyEquivalent="t" id="uir-Rx-zmw">
+                                <modifierMask key="keyEquivalentModifierMask" option="YES"/>
                                 <connections>
                                     <action selector="toggleShowsToolTipsOnDroppedPins:" target="-1" id="1YC-Co-QQ6"/>
                                 </connections>
@@ -495,12 +495,12 @@
                             </menuItem>
                             <menuItem isSeparatorItem="YES" id="Sl5-nE-kHd"/>
                             <menuItem title="Blanket Map With Pins" id="LMZ-oe-Ngh">
-                                <modifierMask key="keyEquivalentModifierMask"/>
+                                <modifierMask key="keyEquivalentModifierMask" option="YES"/>
                                 <connections>
                                     <action selector="dropManyPins:" target="-1" id="Rtv-8N-3Z8"/>
                                 </connections>
                             </menuItem>
-                            <menuItem title="Add Polygon and Polyline" id="DVr-vT-lpe">
+                            <menuItem title="Add Polygon and Polyline" keyEquivalent="p" id="DVr-vT-lpe">
                                 <modifierMask key="keyEquivalentModifierMask"/>
                                 <connections>
                                     <action selector="drawPolygonAndPolyLineAnnotations:" target="-1" id="EhT-CB-gee"/>
@@ -512,14 +512,14 @@
                                     <action selector="drawAnimatedAnnotation:" target="-1" id="CYM-WB-s97"/>
                                 </connections>
                             </menuItem>
-                            <menuItem title="Remove All Annotations" id="6rC-68-vk0">
+                            <menuItem title="Remove All Annotations" keyEquivalent="q" id="6rC-68-vk0">
                                 <modifierMask key="keyEquivalentModifierMask"/>
                                 <connections>
                                     <action selector="removeAllAnnotations:" target="-1" id="6v3-0E-LsR"/>
                                 </connections>
                             </menuItem>
                             <menuItem isSeparatorItem="YES" id="wQq-Mx-QY0"/>
-                            <menuItem title="Start World Tour" id="VFo-Jh-2sw">
+                            <menuItem title="Start World Tour" keyEquivalent="a" id="VFo-Jh-2sw">
                                 <modifierMask key="keyEquivalentModifierMask"/>
                                 <connections>
                                     <action selector="startWorldTour:" target="-1" id="66Y-Gm-Yn1"/>
