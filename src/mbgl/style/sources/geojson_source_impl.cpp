@@ -6,6 +6,7 @@
 #include <mbgl/platform/log.hpp>
 #include <mbgl/util/rapidjson.hpp>
 
+#include <mapbox/geojson.hpp>
 #include <mapbox/geojsonvt.hpp>
 #include <mapbox/geojsonvt/convert.hpp>
 
@@ -19,13 +20,15 @@ namespace mbgl {
 namespace style {
 namespace conversion {
 template <>
-Result<GeoJSON> convertGeoJSON(const JSValue& value) {
+Result<GeoJSON> convertGeoJSON(const std::string & jsonString) {
     Options options;
     options.buffer = util::EXTENT / util::tileSize * 128;
     options.extent = util::EXTENT;
 
+    const auto features = mapbox::geojson::parse(jsonString).get<mapbox::geojson::feature_collection>();
+
     try {
-        return GeoJSON { std::make_unique<GeoJSONVT>(Convert::convert(value, 0), options) };
+        return GeoJSON { std::make_unique<GeoJSONVT>(features, options) };
     } catch (const std::exception& ex) {
         return Error { ex.what() };
     }
@@ -65,8 +68,9 @@ void GeoJSONSource::Impl::load(FileSource& fileSource) {
         } else if (res.noContent) {
             observer->onSourceError(base, std::make_exception_ptr(std::runtime_error("unexpectedly empty GeoJSON")));
         } else {
+            /*
             rapidjson::GenericDocument<rapidjson::UTF8<>, rapidjson::CrtAllocator> d;
-            d.Parse<0>(res.data->c_str());
+            d.Parse<0>();
 
             if (d.HasParseError()) {
                 std::stringstream message;
@@ -74,15 +78,17 @@ void GeoJSONSource::Impl::load(FileSource& fileSource) {
                 observer->onSourceError(base, std::make_exception_ptr(std::runtime_error(message.str())));
                 return;
             }
+            */
 
             invalidateTiles();
 
-            conversion::Result<GeoJSON> geoJSON = conversion::convertGeoJSON<JSValue>(d);
+            conversion::Result<GeoJSON> geoJSON = conversion::convertGeoJSON<std::string>(res.data->c_str());
             if (!geoJSON) {
                 Log::Error(Event::ParseStyle, "Failed to parse GeoJSON data: %s", geoJSON.error().message);
                 // Create an empty GeoJSON VT object to make sure we're not infinitely waiting for
                 // tiles to load.
-                urlOrGeoJSON = GeoJSON { std::make_unique<GeoJSONVT>(std::vector<ProjectedFeature>()) };
+                mapbox::geojson::feature_collection features;
+                urlOrGeoJSON = GeoJSON { std::make_unique<GeoJSONVT>(features) };
             } else {
                 urlOrGeoJSON = std::move(*geoJSON);
             }

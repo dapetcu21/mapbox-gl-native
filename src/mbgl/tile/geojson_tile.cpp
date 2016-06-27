@@ -49,17 +49,20 @@ private:
 std::unique_ptr<GeoJSONTileData> convertTile(const mapbox::geojsonvt::Tile& tile) {
     std::shared_ptr<GeoJSONTileLayer> layer;
 
-    if (tile) {
+    if (tile.features.size()) {
         std::vector<std::shared_ptr<const GeoJSONTileFeature>> features;
         GeometryCoordinates line;
 
         for (auto& feature : tile.features) {
             const FeatureType featureType =
-                (feature.type == mapbox::geojsonvt::TileFeatureType::Point
+                (typeid(feature.geometry) == typeid(mapbox::geometry::point<int16_t>) ||
+                 typeid(feature.geometry) == typeid(mapbox::geometry::multi_point<int16_t>)
                      ? FeatureType::Point
-                     : (feature.type == mapbox::geojsonvt::TileFeatureType::LineString
+                     : (typeid(feature.geometry) == typeid(mapbox::geometry::line_string<int16_t>) ||
+                        typeid(feature.geometry) == typeid(mapbox::geometry::multi_line_string<int16_t>)
                             ? FeatureType::LineString
-                            : (feature.type == mapbox::geojsonvt::TileFeatureType::Polygon
+                            : (typeid(feature.geometry) == typeid(mapbox::geometry::polygon<int16_t>) ||
+                               typeid(feature.geometry) == typeid(mapbox::geometry::multi_polygon<int16_t>)
                                    ? FeatureType::Polygon
                                    : FeatureType::Unknown)));
             if (featureType == FeatureType::Unknown) {
@@ -73,19 +76,48 @@ std::unique_ptr<GeoJSONTileData> convertTile(const mapbox::geojsonvt::Tile& tile
             // (Rings = GeoJSON types MultiLineString, Polygon, MultiPolygon)
             // However, in Mapbox GL, we use one structure for both types, and just have one outer
             // element for Points.
-            if (feature.tileGeometry.is<mapbox::geojsonvt::TilePoints>()) {
+            if (typeid(feature.geometry) == typeid(mapbox::geometry::point<int16_t>)) {
                 line.clear();
-                for (auto& point : feature.tileGeometry.get<mapbox::geojsonvt::TilePoints>()) {
+                const auto point = feature.geometry.get<mapbox::geometry::point<int16_t>>();
+                line.emplace_back(point.x, point.y);
+                geometry.emplace_back(std::move(line));
+            } else if (typeid(feature.geometry) == typeid(mapbox::geometry::line_string<int16_t>)) {
+                line.clear();
+                for (auto & point : feature.geometry.get<mapbox::geometry::line_string<int16_t>>()) {
                     line.emplace_back(point.x, point.y);
                 }
                 geometry.emplace_back(std::move(line));
-            } else if (feature.tileGeometry.is<mapbox::geojsonvt::TileRings>()) {
-                for (auto& ring : feature.tileGeometry.get<mapbox::geojsonvt::TileRings>()) {
+            } else if (typeid(feature.geometry) == typeid(mapbox::geometry::multi_point<int16_t>)) {
+                line.clear();
+                for (auto & point : feature.geometry.get<mapbox::geometry::multi_point<int16_t>>()) {
+                    line.emplace_back(point.x, point.y);
+                }
+                geometry.emplace_back(std::move(line));
+            } else if (typeid(feature.geometry) == typeid(mapbox::geometry::multi_line_string<int16_t>)) {
+                for (auto & ring : feature.geometry.get<mapbox::geometry::multi_line_string<int16_t>>()) {
                     line.clear();
-                    for (auto& point : ring) {
+                    for (auto & point : ring) {
                         line.emplace_back(point.x, point.y);
                     }
                     geometry.emplace_back(std::move(line));
+                }
+            } else if (typeid(feature.geometry) == typeid(mapbox::geometry::polygon<int16_t>)) {
+                for (auto & ring : feature.geometry.get<mapbox::geometry::polygon<int16_t>>()) {
+                    line.clear();
+                    for (auto & point : ring) {
+                        line.emplace_back(point.x, point.y);
+                    }
+                    geometry.emplace_back(std::move(line));
+                }
+            } else if (typeid(feature.geometry) == typeid(mapbox::geometry::multi_polygon<int16_t>)) {
+                for (auto & polygon : feature.geometry.get<mapbox::geometry::multi_polygon<int16_t>>()) {
+                    for (auto & ring : polygon) {
+                        line.clear();
+                        for (auto & point : ring) {
+                            line.emplace_back(point.x, point.y);
+                        }
+                        geometry.emplace_back(std::move(line));
+                    }
                 }
             }
 
@@ -94,7 +126,7 @@ std::unique_ptr<GeoJSONTileData> convertTile(const mapbox::geojsonvt::Tile& tile
                 geometry = fixupPolygons(geometry);
             }
 
-            Feature::property_map properties{ feature.tags.begin(), feature.tags.end() };
+            Feature::property_map properties{ feature.properties.begin(), feature.properties.end() };
 
             features.emplace_back(std::make_shared<GeoJSONTileFeature>(
                 featureType, std::move(geometry), std::move(properties)));
