@@ -7,6 +7,7 @@
 #include <mbgl/util/rapidjson.hpp>
 
 #include <mapbox/geojson.hpp>
+#include <mapbox/geojson/rapidjson.hpp>
 #include <mapbox/geojsonvt.hpp>
 #include <mapbox/geojsonvt/convert.hpp>
 
@@ -20,12 +21,12 @@ namespace mbgl {
 namespace style {
 namespace conversion {
 template <>
-Result<GeoJSON> convertGeoJSON(const std::string & jsonString) {
+Result<GeoJSON> convertGeoJSON(const JSValue& value) {
     Options options;
     options.buffer = util::EXTENT / util::tileSize * 128;
     options.extent = util::EXTENT;
 
-    const auto features = mapbox::geojson::parse(jsonString).get<mapbox::geojson::feature_collection>();
+    const auto features = mapbox::geojson::convert(value).get<mapbox::geojson::feature_collection>();
 
     try {
         return GeoJSON { std::make_unique<GeoJSONVT>(features, options) };
@@ -68,9 +69,8 @@ void GeoJSONSource::Impl::load(FileSource& fileSource) {
         } else if (res.noContent) {
             observer->onSourceError(base, std::make_exception_ptr(std::runtime_error("unexpectedly empty GeoJSON")));
         } else {
-            /*
             rapidjson::GenericDocument<rapidjson::UTF8<>, rapidjson::CrtAllocator> d;
-            d.Parse<0>();
+            d.Parse<0>(res.data->c_str());
 
             if (d.HasParseError()) {
                 std::stringstream message;
@@ -78,11 +78,10 @@ void GeoJSONSource::Impl::load(FileSource& fileSource) {
                 observer->onSourceError(base, std::make_exception_ptr(std::runtime_error(message.str())));
                 return;
             }
-            */
 
             invalidateTiles();
 
-            conversion::Result<GeoJSON> geoJSON = conversion::convertGeoJSON<std::string>(res.data->c_str());
+            conversion::Result<GeoJSON> geoJSON = conversion::convertGeoJSON<JSValue>(d);
             if (!geoJSON) {
                 Log::Error(Event::ParseStyle, "Failed to parse GeoJSON data: %s", geoJSON.error().message);
                 // Create an empty GeoJSON VT object to make sure we're not infinitely waiting for
