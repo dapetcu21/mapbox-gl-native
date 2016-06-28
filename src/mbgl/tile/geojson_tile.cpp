@@ -53,73 +53,17 @@ std::unique_ptr<GeoJSONTileData> convertTile(const mapbox::geojsonvt::Tile& tile
         std::vector<std::shared_ptr<const GeoJSONTileFeature>> features;
         GeometryCoordinates line;
 
+        ToFeatureType toFeatureType;
+        ToGeometryCollection toGeometryCollection;
+
         for (auto& feature : tile.features) {
-            const FeatureType featureType =
-                (typeid(feature.geometry) == typeid(mapbox::geometry::point<int16_t>) ||
-                 typeid(feature.geometry) == typeid(mapbox::geometry::multi_point<int16_t>)
-                     ? FeatureType::Point
-                     : (typeid(feature.geometry) == typeid(mapbox::geometry::line_string<int16_t>) ||
-                        typeid(feature.geometry) == typeid(mapbox::geometry::multi_line_string<int16_t>)
-                            ? FeatureType::LineString
-                            : (typeid(feature.geometry) == typeid(mapbox::geometry::polygon<int16_t>) ||
-                               typeid(feature.geometry) == typeid(mapbox::geometry::multi_polygon<int16_t>)
-                                   ? FeatureType::Polygon
-                                   : FeatureType::Unknown)));
+            const FeatureType featureType = apply_visitor(toFeatureType, feature.geometry);
+
             if (featureType == FeatureType::Unknown) {
                 continue;
             }
 
-            GeometryCollection geometry;
-
-            // Flatten the geometry; GeoJSONVT distinguishes between a Points array and Rings array
-            // (Points = GeoJSON types Point, MultiPoint, LineString)
-            // (Rings = GeoJSON types MultiLineString, Polygon, MultiPolygon)
-            // However, in Mapbox GL, we use one structure for both types, and just have one outer
-            // element for Points.
-            if (typeid(feature.geometry) == typeid(mapbox::geometry::point<int16_t>)) {
-                line.clear();
-                const auto point = feature.geometry.get<mapbox::geometry::point<int16_t>>();
-                line.emplace_back(point.x, point.y);
-                geometry.emplace_back(std::move(line));
-            } else if (typeid(feature.geometry) == typeid(mapbox::geometry::line_string<int16_t>)) {
-                line.clear();
-                for (auto & point : feature.geometry.get<mapbox::geometry::line_string<int16_t>>()) {
-                    line.emplace_back(point.x, point.y);
-                }
-                geometry.emplace_back(std::move(line));
-            } else if (typeid(feature.geometry) == typeid(mapbox::geometry::multi_point<int16_t>)) {
-                line.clear();
-                for (auto & point : feature.geometry.get<mapbox::geometry::multi_point<int16_t>>()) {
-                    line.emplace_back(point.x, point.y);
-                }
-                geometry.emplace_back(std::move(line));
-            } else if (typeid(feature.geometry) == typeid(mapbox::geometry::multi_line_string<int16_t>)) {
-                for (auto & ring : feature.geometry.get<mapbox::geometry::multi_line_string<int16_t>>()) {
-                    line.clear();
-                    for (auto & point : ring) {
-                        line.emplace_back(point.x, point.y);
-                    }
-                    geometry.emplace_back(std::move(line));
-                }
-            } else if (typeid(feature.geometry) == typeid(mapbox::geometry::polygon<int16_t>)) {
-                for (auto & ring : feature.geometry.get<mapbox::geometry::polygon<int16_t>>()) {
-                    line.clear();
-                    for (auto & point : ring) {
-                        line.emplace_back(point.x, point.y);
-                    }
-                    geometry.emplace_back(std::move(line));
-                }
-            } else if (typeid(feature.geometry) == typeid(mapbox::geometry::multi_polygon<int16_t>)) {
-                for (auto & polygon : feature.geometry.get<mapbox::geometry::multi_polygon<int16_t>>()) {
-                    for (auto & ring : polygon) {
-                        line.clear();
-                        for (auto & point : ring) {
-                            line.emplace_back(point.x, point.y);
-                        }
-                        geometry.emplace_back(std::move(line));
-                    }
-                }
-            }
+            GeometryCollection geometry = apply_visitor(toGeometryCollection, feature.geometry);
 
             // https://github.com/mapbox/geojson-vt-cpp/issues/44
             if (featureType == FeatureType::Polygon) {

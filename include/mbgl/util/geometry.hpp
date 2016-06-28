@@ -12,6 +12,16 @@ enum class FeatureType : uint8_t {
     Polygon = 3
 };
 
+struct ToFeatureType {
+    FeatureType operator()(mapbox::geometry::point<int16_t>) const { return FeatureType::Point; }
+    FeatureType operator()(mapbox::geometry::multi_point<int16_t>) const { return FeatureType::Point; }
+    FeatureType operator()(mapbox::geometry::line_string<int16_t>) const { return FeatureType::LineString; }
+    FeatureType operator()(mapbox::geometry::multi_line_string<int16_t>) const { return FeatureType::LineString; }
+    FeatureType operator()(mapbox::geometry::polygon<int16_t>) const { return FeatureType::Polygon; }
+    FeatureType operator()(mapbox::geometry::multi_polygon<int16_t>) const { return FeatureType::Polygon; }
+    FeatureType operator()(mapbox::geometry::geometry_collection<int16_t>) const { return FeatureType::Unknown; }
+};
+
 template <class T>
 using Point = mapbox::geometry::point<T>;
 
