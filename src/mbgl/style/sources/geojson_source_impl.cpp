@@ -20,15 +20,34 @@ using namespace mapbox::geojsonvt;
 namespace mbgl {
 namespace style {
 namespace conversion {
+
+struct ToFeatureCollection {
+    mapbox::geojson::feature_collection operator()(const mapbox::geojson::feature_collection value) const {
+        return value;
+    }
+    mapbox::geojson::feature_collection operator()(const mapbox::geojson::feature value) const {
+        mapbox::geojson::feature_collection features;
+        features.emplace_back(value);
+        return features;
+    }
+    mapbox::geojson::feature_collection operator()(const mapbox::geojson::geometry value) const {
+        mapbox::geojson::feature_collection features;
+        mapbox::geojson::feature feature = { value };
+        features.emplace_back(feature);
+        return features;
+    }
+};
+
 template <>
 Result<GeoJSON> convertGeoJSON(const JSValue& value) {
     Options options;
     options.buffer = util::EXTENT / util::tileSize * 128;
     options.extent = util::EXTENT;
 
-    const auto features = mapbox::geojson::convert(value).get<mapbox::geojson::feature_collection>();
-
     try {
+        ToFeatureCollection toFeatureCollection;
+        const auto geojson = mapbox::geojson::convert(value);
+        const auto features = apply_visitor(toFeatureCollection, geojson);
         return GeoJSON { std::make_unique<GeoJSONVT>(features, options) };
     } catch (const std::exception& ex) {
         return Error { ex.what() };
