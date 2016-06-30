@@ -98,7 +98,6 @@ struct ToGeometryCollection {
         coordinates.reserve(geom.size());
         for (auto& point : geom) {
             coordinates.emplace_back(point.x, point.y);
-            std::cout << point.x << "\n";
         }
         collection.push_back(coordinates);
         return collection;

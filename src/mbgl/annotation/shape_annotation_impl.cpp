@@ -22,15 +22,12 @@ void ShapeAnnotationImpl::updateTileData(const CanonicalTileID& tileID, Annotati
     static const double baseTolerance = 4;
 
     if (!shapeTiler) {
-        const uint64_t maxAmountOfTileFeatures = (1ull << maxZoom) * util::EXTENT;
-        const double tolerance = baseTolerance / maxAmountOfTileFeatures;
-        ToGeometry toGeometry;
         mapbox::geometry::feature_collection<double> features;
         features.emplace_back(ShapeAnnotationGeometry::visit(geometry(), [] (auto&& geom) {
             return Feature(std::move(geom));
         }));
         mapbox::geojsonvt::Options options;
-        options.maxZoom = maxZoom;
+        options.maxZoom = mbgl::util::clamp((int)maxZoom, 0, 18);
         options.buffer = 255u;
         options.extent = util::EXTENT;
         options.tolerance = baseTolerance;
