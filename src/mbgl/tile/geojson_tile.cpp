@@ -70,7 +70,7 @@ std::unique_ptr<GeoJSONTileData> convertTile(const mapbox::geojsonvt::Tile& tile
                 geometry = fixupPolygons(geometry);
             }
 
-            Feature::property_map properties{ feature.properties.begin(), feature.properties.end() };
+            Feature::property_map properties = feature.properties;
 
             features.emplace_back(std::make_shared<GeoJSONTileFeature>(
                 featureType, std::move(geometry), std::move(properties)));

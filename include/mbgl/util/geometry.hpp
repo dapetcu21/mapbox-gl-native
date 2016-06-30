@@ -12,16 +12,6 @@ enum class FeatureType : uint8_t {
     Polygon = 3
 };
 
-struct ToFeatureType {
-    FeatureType operator()(mapbox::geometry::point<int16_t>) const { return FeatureType::Point; }
-    FeatureType operator()(mapbox::geometry::multi_point<int16_t>) const { return FeatureType::Point; }
-    FeatureType operator()(mapbox::geometry::line_string<int16_t>) const { return FeatureType::LineString; }
-    FeatureType operator()(mapbox::geometry::multi_line_string<int16_t>) const { return FeatureType::LineString; }
-    FeatureType operator()(mapbox::geometry::polygon<int16_t>) const { return FeatureType::Polygon; }
-    FeatureType operator()(mapbox::geometry::multi_polygon<int16_t>) const { return FeatureType::Polygon; }
-    FeatureType operator()(mapbox::geometry::geometry_collection<int16_t>) const { return FeatureType::Unknown; }
-};
-
 template <class T>
 using Point = mapbox::geometry::point<T>;
 
@@ -50,5 +40,22 @@ template <class S, class T>
 Point<S> convertPoint(const Point<T>& p) {
     return Point<S>(p.x, p.y);
 }
+
+struct ToFeatureType {
+    template <class T>
+    FeatureType operator()(const Point<T> &) const { return FeatureType::Point; }
+    template <class T>
+    FeatureType operator()(const MultiPoint<T> &) const { return FeatureType::Point; }
+    template <class T>
+    FeatureType operator()(const LineString<T> &) const { return FeatureType::LineString; }
+    template <class T>
+    FeatureType operator()(const MultiLineString<T> &) const { return FeatureType::LineString; }
+    template <class T>
+    FeatureType operator()(const Polygon<T> &) const { return FeatureType::Polygon; }
+    template <class T>
+    FeatureType operator()(const MultiPolygon<T> &) const { return FeatureType::Polygon; }
+    template <class T>
+    FeatureType operator()(const mapbox::geometry::geometry_collection<T> &) const { return FeatureType::Unknown; }
+};
 
 } // namespace mbgl

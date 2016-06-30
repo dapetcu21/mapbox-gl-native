@@ -18,13 +18,6 @@ ShapeAnnotationImpl::ShapeAnnotationImpl(const AnnotationID id_, const uint8_t m
       layerID("com.mapbox.annotations.shape." + util::toString(id)) {
 }
 
-struct ToGeometry {
-    mapbox::geometry::geometry<double> operator()(mapbox::geometry::line_string<double, std::vector> geom) const { return geom; }
-    mapbox::geometry::geometry<double> operator()(mapbox::geometry::polygon<double, std::vector> geom) const { return geom; }
-    mapbox::geometry::geometry<double> operator()(mapbox::geometry::multi_line_string<double, std::vector> geom) const { return geom; }
-    mapbox::geometry::geometry<double> operator()(mapbox::geometry::multi_polygon<double, std::vector> geom) const { return geom; }
-};
-
 void ShapeAnnotationImpl::updateTileData(const CanonicalTileID& tileID, AnnotationTileData& data) {
     static const double baseTolerance = 4;
 
@@ -33,8 +26,9 @@ void ShapeAnnotationImpl::updateTileData(const CanonicalTileID& tileID, Annotati
         const double tolerance = baseTolerance / maxAmountOfTileFeatures;
         ToGeometry toGeometry;
         mapbox::geometry::feature_collection<double> features;
-        mapbox::geometry::feature<double> feature = { apply_visitor(toGeometry, geometry()) };
-        features.emplace_back(feature);
+        features.emplace_back(ShapeAnnotationGeometry::visit(geometry(), [] (auto&& geom) {
+            return Feature(std::move(geom));
+        }));
         mapbox::geojsonvt::Options options;
         options.maxZoom = maxZoom;
         options.buffer = 255u;
@@ -44,7 +38,7 @@ void ShapeAnnotationImpl::updateTileData(const CanonicalTileID& tileID, Annotati
     }
 
     const auto& shapeTile = shapeTiler->getTile(tileID.z, tileID.x, tileID.y);
-    if (shapeTile.features.size() == 0)
+    if (shapeTile.features.empty())
         return;
 
     AnnotationTileLayer& layer = *data.layers.emplace(layerID,

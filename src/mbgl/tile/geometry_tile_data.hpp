@@ -85,6 +85,7 @@ struct ToGeometryCollection {
     GeometryCollection operator()(const mapbox::geometry::multi_point<int16_t>& geom) const {
         GeometryCollection collection;
         GeometryCoordinates coordinates;
+        coordinates.reserve(geom.size());
         for (auto& point : geom) {
             coordinates.emplace_back(point.x, point.y);
         }
@@ -94,6 +95,7 @@ struct ToGeometryCollection {
     GeometryCollection operator()(const mapbox::geometry::line_string<int16_t>& geom) const {
         GeometryCollection collection;
         GeometryCoordinates coordinates;
+        coordinates.reserve(geom.size());
         for (auto& point : geom) {
             coordinates.emplace_back(point.x, point.y);
             std::cout << point.x << "\n";
@@ -105,6 +107,7 @@ struct ToGeometryCollection {
         GeometryCollection collection;
         for (auto& ring : geom) {
             GeometryCoordinates coordinates;
+            coordinates.reserve(ring.size());
             for (auto& point : ring) {
                 coordinates.emplace_back(point.x, point.y);
             }
@@ -116,6 +119,7 @@ struct ToGeometryCollection {
         GeometryCollection collection;
         for (auto& ring : geom) {
             GeometryCoordinates coordinates;
+            coordinates.reserve(ring.size());
             for (auto& point : ring) {
                 coordinates.emplace_back(point.x, point.y);
             }
@@ -128,6 +132,7 @@ struct ToGeometryCollection {
         for (auto& polygon : geom) {
             for (auto& ring : polygon) {
                 GeometryCoordinates coordinates;
+                coordinates.reserve(ring.size());
                 for (auto& point : ring) {
                     coordinates.emplace_back(point.x, point.y);
                 }
