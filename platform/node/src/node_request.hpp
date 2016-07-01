@@ -11,31 +11,47 @@
 
 namespace node_mbgl {
 
-class NodeFileSource;
-class NodeRequest;
-
-class NodeRequest : public Nan::ObjectWrap {
+class NodeRequestWorker : public Nan::AsyncWorker {
 public:
-    static NAN_MODULE_INIT(Init);
+    NodeRequestWorker(v8::Local<v8::Object>, const mbgl::Resource&, mbgl::FileSource::Callback);
+    virtual ~NodeRequestWorker();
 
-    static NAN_METHOD(New);
-    static NAN_METHOD(Respond);
+    virtual void Execute();
+    virtual void Destroy();
+    virtual void WorkComplete();
 
-    static v8::Handle<v8::Object> Create(const mbgl::Resource&, mbgl::FileSource::Callback);
-    static Nan::Persistent<v8::Function> constructor;
+    static void HandleCallback(const Nan::FunctionCallbackInfo<v8::Value>& info);
 
-    NodeRequest(mbgl::FileSource::Callback);
-    ~NodeRequest();
+    class NodeRequest : public Nan::ObjectWrap {
+    public:
+        static NAN_MODULE_INIT(Init);
+        static Nan::Persistent<v8::Function> constructor;
+        static void New(const Nan::FunctionCallbackInfo<v8::Value>&);
 
-    struct NodeAsyncRequest : public mbgl::AsyncRequest {
-        NodeAsyncRequest(NodeRequest*);
-        ~NodeAsyncRequest() override;
-        NodeRequest* request;
+    private:
+        NodeRequest();
+        ~NodeRequest();
     };
 
+    struct NodeAsyncRequest : public mbgl::AsyncRequest {
+        NodeAsyncRequest(NodeRequestWorker*);
+        ~NodeAsyncRequest() override;
+
+        NodeRequestWorker* worker;
+    };
+
+protected:
+    virtual void HandleOKCallback();
+    virtual void HandleErrorCallback();
+
 private:
-    mbgl::FileSource::Callback callback;
+    v8::Local<v8::Object> nodeMapHandle;
+    const mbgl::Resource& resource;
+    std::unique_ptr<mbgl::FileSource::Callback> fileSourceCallback;
     NodeAsyncRequest* asyncRequest = nullptr;
+    mbgl::Response response;
+
+    static Nan::Persistent<v8::Function> handleCallback;
 };
 
 }
