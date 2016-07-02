@@ -49,6 +49,8 @@ private:
     const mbgl::Resource& resource;
     std::unique_ptr<mbgl::FileSource::Callback> fileSourceCallback;
     NodeAsyncRequest* asyncRequest = nullptr;
+
+    Nan::Persistent<v8::Function> callback;
     mbgl::Response response;
 
     static Nan::Persistent<v8::Function> handleCallback;

@@ -3,6 +3,7 @@
 #include <mbgl/util/chrono.hpp>
 
 #include <cmath>
+#include <iostream>
 
 namespace node_mbgl {
 
@@ -13,9 +14,20 @@ NodeRequestWorker::NodeRequestWorker(
     : AsyncWorker(nullptr),
     nodeMapHandle(nodeMapHandle_),
     resource(resource_),
-    fileSourceCallback(std::make_unique<mbgl::FileSource::Callback>(fileSourceCallback_)) {}
+    fileSourceCallback(std::make_unique<mbgl::FileSource::Callback>(fileSourceCallback_)) {
+    Nan::HandleScope scope;
 
-NodeRequestWorker::~NodeRequestWorker() {}
+    auto fn = Nan::New(handleCallback);
+
+    // Bind a reference to this object on the callback function
+    fn->SetHiddenValue(Nan::New("worker").ToLocalChecked(), Nan::New<v8::External>(this));
+
+    callback.Reset(fn);
+}
+
+NodeRequestWorker::~NodeRequestWorker() {
+    std::cout << "~NodeRequestWorker" << std::endl;
+}
 
 void NodeRequestWorker::Execute() {
     Nan::HandleScope scope;
@@ -25,20 +37,17 @@ void NodeRequestWorker::Execute() {
     Nan::Set(req, Nan::New("url").ToLocalChecked(), Nan::New<v8::String>(resource.url).ToLocalChecked());
     Nan::Set(req, Nan::New("kind").ToLocalChecked(), Nan::New<v8::Integer>(resource.kind));
 
-    auto callback = Nan::New(handleCallback);
-
-    // Bind a reference to this object on the callback function
-    callback->SetHiddenValue(Nan::New("worker").ToLocalChecked(), Nan::New<v8::External>(this));
-
     v8::Local<v8::Value> argv[] = {
         req,
-        callback
+        Nan::New(callback)
     };
 
     Nan::MakeCallback(nodeMapHandle, "request", 2, argv);
 }
 
 void NodeRequestWorker::Destroy() {
+    std::cout << "Destroy" << !fileSourceCallback << std::endl;
+
     // When this object gets destroyed, make sure that the
     // AsyncRequest can no longer attempt to remove the callback function
     // this object was holding (it can't be fired anymore).
@@ -48,8 +57,10 @@ void NodeRequestWorker::Destroy() {
 }
 
 void NodeRequestWorker::WorkComplete() {
+    std::cout << "WorkComplete" << !fileSourceCallback << std::endl;
+
     // If callback has already been called, no-op
-    if (!fileSourceCallback) return;
+    if (!fileSourceCallback) return Destroy();
 
     ErrorMessage() ? HandleErrorCallback() : HandleOKCallback();
 }
@@ -144,8 +155,13 @@ void NodeRequestWorker::HandleErrorCallback() {
     cb = nullptr;
 }
 
-NodeRequestWorker::NodeRequest::NodeRequest() {}
-NodeRequestWorker::NodeRequest::~NodeRequest() {}
+NodeRequestWorker::NodeRequest::NodeRequest() {
+    std::cout << "NodeRequest" << std::endl;
+}
+
+NodeRequestWorker::NodeRequest::~NodeRequest() {
+    std::cout << "~NodeRequest" << std::endl;
+}
 
 Nan::Persistent<v8::Function> NodeRequestWorker::NodeRequest::constructor;
 

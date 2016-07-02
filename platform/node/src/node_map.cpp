@@ -740,10 +740,10 @@ NodeMap::~NodeMap() {
 std::unique_ptr<mbgl::AsyncRequest> NodeMap::request(const mbgl::Resource& resource, Callback callback_) {
     Nan::HandleScope scope;
 
-    auto worker = new NodeRequestWorker(handle()->GetInternalField(1)->ToObject(), resource, callback_);
-    worker->Execute();
+    NodeRequestWorker worker(handle()->GetInternalField(1)->ToObject(), resource, callback_);
+    worker.Execute();
 
-    return std::make_unique<NodeRequestWorker::NodeAsyncRequest>(worker);
+    return std::make_unique<NodeRequestWorker::NodeAsyncRequest>(&worker);
 }
 
 } // namespace node_mbgl
